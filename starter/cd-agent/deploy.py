@@ -28,7 +28,16 @@ def deploy(pr_url: str, image_url: str):
     # Tell the agent to follow the canary deploy skill and close the linked issue on success.
     #
     # prompt = ...
-
+    prompt = (
+        f"Deploy this merged PR to Cloud Run: {pr_url}\n"
+        f"Container image (already built): {image_url}\n"
+        f"GCP access token: {gcp_token}\n"
+        f"Project: {PROJECT_ID}\n"
+        f"Region: {REGION}\n"
+        f"Service: {SERVICE_NAME}\n\n"
+        f"Follow the canary deploy skill. Monitor for 5 minutes, then promote or rollback. "
+        f"Close the linked GitHub issue on success."
+    )
     # TODO 2: Call the Interactions API with three MCP servers
     # Use client.interactions.create() with:
     # - agent: CD_AGENT_ID
@@ -45,7 +54,41 @@ def deploy(pr_url: str, image_url: str):
     # Then iterate over the stream and print each event.
     print("TODO: implement the Interactions API call in deploy()", flush=True)
 
+    stream = client.interactions.create(
+        agent=CD_AGENT_ID,
+        input=prompt,
+        tools=[
+            {
+                "type": "mcp_server",
+                "url": "https://api.githubcopilot.com/mcp/",
+                "name": "github",
+                "headers": {
+                    "Authorization": f"Bearer {GH_TOKEN}",
+                    "X-MCP-Exclude-Tools": "delete_file",
+                },
+            },
+            {
+                "type": "mcp_server",
+                "url": "https://monitoring.googleapis.com/mcp",
+                "name": "cloudmonitoring",
+                "headers": {"Authorization": f"Bearer {gcp_token}"},
+            },
+            {
+                "type": "mcp_server",
+                "url": "https://logging.googleapis.com/mcp",
+                "name": "cloudlogging",
+                "headers": {"Authorization": f"Bearer {gcp_token}"},
+            },
+        ],
+        stream=True,
+        background=True,
+        store=True,
+    )
 
+    for event in stream:
+        print(str(event)[:300], flush=True)
+
+    print("CD agent completed.", flush=True)
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Usage: deploy.py <pr_url> <image_url>")
