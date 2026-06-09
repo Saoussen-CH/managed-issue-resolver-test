@@ -21,7 +21,14 @@ def resolve(issue_url: str):
     #
     # auth_repo_url = ...
     # prompt = ...
+    auth_repo_url = REPO_URL.replace("https://", f"https://x-access-token:{GH_TOKEN}@")
 
+    prompt = (
+        f"Resolve this GitHub issue: {issue_url}\n"
+        f"Repository clone URL (authenticated): {auth_repo_url}\n\n"
+        f"Use the GitHub MCP server to read the issue and open the PR. "
+        f"Use the authenticated clone URL for git clone and git push."
+    )
     # TODO 2: Call the Interactions API (data plane)
     # Use client.interactions.create() with:
     # - agent: the named agent ID (already defined above as RESOLVER_AGENT_ID)
@@ -36,7 +43,29 @@ def resolve(issue_url: str):
     #
     # Then iterate over the stream and print each event (truncated to 300 chars).
     print("TODO: implement the Interactions API call in resolve()", flush=True)
+    stream = client.interactions.create(
+        agent=RESOLVER_AGENT_ID,
+        input=prompt,
+        tools=[
+            {
+                "type": "mcp_server",
+                "url": "https://api.githubcopilot.com/mcp/",
+                "name": "github",
+                "headers": {
+                    "Authorization": f"Bearer {GH_TOKEN}",
+                    "X-MCP-Exclude-Tools": "delete_file",
+                },
+            },
+        ],
+        stream=True,
+        background=True,
+        store=True,
+    )
 
+    for event in stream:
+        print(str(event)[:300], flush=True)
+
+    print("Agent completed.", flush=True)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
