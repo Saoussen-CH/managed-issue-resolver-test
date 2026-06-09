@@ -48,11 +48,15 @@ def create_agent(
         # TODO 1: Pass system_instruction
         # The content of AGENTS.md is passed here as a string.
         # The variable holding the resolver's AGENTS.md content is: system_instruction
-
+        system_instruction=system_instruction,
         # TODO 2: Add the tools list
         # The resolver needs three tools: code_execution, google_search, url_context.
         # Format: tools=[{"type": "..."}, ...]
-
+        tools=[
+            {"type": "code_execution"},
+            {"type": "google_search"},
+            {"type": "url_context"},
+        ],
         # TODO 3: Add base_environment
         # Mount agent-home/ from GCS at /.agent so AGENTS.md and SKILL.md are in the sandbox.
         # Also allow all outbound network traffic.
@@ -68,6 +72,17 @@ def create_agent(
         #     ],
         #     "network": {"allowlist": [{"domain": "???"}]},       # <-- allow all domains
         # },
+        base_environment={
+            "type": "remote",
+            "sources": [
+                {
+                    "type": "gcs",
+                    "source": f"gs://{GCS_SKILLS_BUCKET}/{agent_home_gcs_prefix}",
+                    "target": "/.agent",
+                }
+            ],
+            "network": {"allowlist": [{"domain": "*"}]},
+        },        
     )
     for _ in range(12):
         time.sleep(5)

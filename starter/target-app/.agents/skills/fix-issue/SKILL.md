@@ -23,10 +23,41 @@ Called with a GitHub issue URL and an authenticated repository clone URL.
      6. The quality gate before pushing (what must be true)
      7. How to create and push the branch and open the PR (naming convention, PR body)
 -->
+1. Read the issue using the GitHub MCP server to get the title, body, and number.
 
+2. Clone the repository and read its structure:
+   ```bash
+   git clone <auth_repo_url> /workspace/repo
+   cd /workspace/repo && ls -la
+   ```
+
+3. Install dependencies (check for `requirements.txt`, `package.json`, `pyproject.toml`).
+
+4. Run the existing tests to see the current failure baseline.
+
+5. Diagnose the issue using the symptom-to-location playbook.
+
+6. Write the fix. Change only the code that causes the reported behavior.
+
+7. Run the tests again. If any fail, iterate. Do not open a PR until all pass.
+
+8. Commit and push:
+   ```bash
+   git config user.email "agent@managed-agents.dev"
+   git config user.name "Issue Resolver Agent"
+   git checkout -b fix/issue-<ISSUE_NUMBER>
+   git add -A
+   git commit -m "fix: <description> (closes #<ISSUE_NUMBER>)"
+   git push origin fix/issue-<ISSUE_NUMBER>
+   ```
+
+9. Open a PR via GitHub MCP. Post a comment on the issue with the PR URL.
 ## Critical rules
 
 <!-- TODO: Add the hard constraints from the skill's perspective.
      Focus on what must never be skipped (test run, specific tool for GitHub ops)
      and what must never happen (pushing with failing tests, creating new files).
 -->
+- **MANDATORY: run the full test suite before opening a PR.**
+- **Do NOT create new files to apply a fix.**
+- **Do NOT open a PR if any tests fail.** Iterate until they pass.

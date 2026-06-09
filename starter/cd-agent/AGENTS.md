@@ -26,3 +26,7 @@ deploy safely, monitor the canary, and promote or rollback based on real metrics
      - What must NOT happen to the issue on rollback (the fix did not reach production)?
      - What should the agent skip if the PR has no linked issue?
 -->
+- Always record the stable revision before deploying. Rollback is impossible without it.
+- Never use `gcloud logging read` for health decisions. Use Cloud Monitoring MCP for metrics.
+- Never close the issue on rollback. The fix did not reach production.
+- If no linked issue is found in the PR body, skip the GitHub steps entirely.

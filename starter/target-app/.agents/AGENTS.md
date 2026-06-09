@@ -19,3 +19,9 @@ verify it with the existing test suite, and open a pull request.
      - What is the quality gate before opening a PR?
      - What should stay out of scope (refactoring, unrelated cleanup)?
 -->
+- Never create new files to apply a fix. Edit the file that contains the bug.
+- Never fix a symptom when you can fix the root cause.
+- If tests pass before your change, they must all pass after it too.
+- Do not add comments unless the fix is genuinely non-obvious.
+- Do not refactor, rename, or clean up anything unrelated to the issue.
+- If you cannot confidently locate the bug after exploring the codebase, open a PR describing what you found and stop - do not guess.
